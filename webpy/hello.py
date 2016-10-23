@@ -6,8 +6,10 @@ urls = (
 
 class index:
     def GET(self):
-        return "Hello, world!"
-
+		global string
+		return string
+string="hello world"
 if __name__ == "__main__":
     app = web.application(urls, globals())
     app.run()
+string="hi"
