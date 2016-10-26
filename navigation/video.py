@@ -75,7 +75,10 @@ def get_distance_metres(aLocation1, aLocation2):
 	dlong = aLocation2.lon - aLocation1.lon
 	return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
 
-arm_and_takeoff(2)
+def detect_image():
+	return False
+
+arm_and_takeoff(3)
 # Get Vehicle Home location - will be `None` until first set by autopilot
 while not vehicle.location.global_relative_frame:
 	print " Waiting for home location ..."
@@ -84,8 +87,23 @@ print "\n Home location: %s" % vehicle.location.global_relative_frame
 homeLocation = vehicle.location.global_relative_frame
 
 print " Location: ", vehicle.location.global_relative_frame
-time.sleep(5)
-send_ned_velocity(3,0,0,20)
+time.sleep(2)
+
+last_point = homeLocation
+velocity_x =0.5
+while get_distance_metres(homeLocation, vehicle.location.global_relative_frame)<10*math.sqrt(2):
+	print "move to the east"
+	send_ned_velocity(0,1,0,1)
+	last_point = vehicle.location.global_relative_frame
+	while get_distance_metres(last_point, vehicle.location.global_relative_frame)<10:
+		# if detect_image():
+			#update remote pc
+		print "Searching: "
+		send_ned_velocity(velocity_x,0,0,1)
+	velocity_x = -velocity_x
+
+
+
 time.sleep(1)
 vehicle.airspeed=3
 vehicle.simple_goto(homeLocation)
