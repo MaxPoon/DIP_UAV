@@ -2,7 +2,7 @@ print "Start simulator (SITL)"
 import dronekit_sitl
 sitl = dronekit_sitl.start_default()
 connection_string = sitl.connection_string()
-from dronekit import connect, VehicleMode
+from dronekit import connect, VehicleMode,mavutil
 import time
 # Connect to the Vehicle.
 print("Connecting to vehicle on: %s" % (connection_string,))
@@ -42,9 +42,42 @@ def arm_and_takeoff(aTargetAltitude):
 			break
 		time.sleep(1)
 
+def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
+	"""
+	Move vehicle in direction based on specified velocity vectors.
+	"""
+	msg = vehicle.message_factory.set_position_target_local_ned_encode(
+		0,       # time_boot_ms (not used)
+		0, 0,    # target system, target component
+		mavutil.mavlink.MAV_FRAME_LOCAL_NED, # frame
+		0b0000111111000111, # type_mask (only speeds enabled)
+		0, 0, 0, # x, y, z positions (not used)
+		velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
+		0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
+		0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+
+
+	# send command to vehicle on 1 Hz cycle
+	for x in range(0,duration):
+		vehicle.send_mavlink(msg)
+		time.sleep(1)
+		print " Location: ", vehicle.location.global_relative_frame
+
 arm_and_takeoff(2)
+# Get Vehicle Home location - will be `None` until first set by autopilot
+while not vehicle.location.global_relative_frame:
+	print " Waiting for home location ..."
+# We have a home location, so print it!        
+print "\n Home location: %s" % vehicle.location.global_relative_frame
+homeLocation = vehicle.location.global_relative_frame
+
 print " Location: ", vehicle.location.global_relative_frame
 time.sleep(5)
+send_ned_velocity(3,0,0,20)
+time.sleep(1)
+vehicle.airspeed=3
+vehicle.simple_goto(homeLocation)
+time.sleep(40)
 print "Setting LAND mode..."
 print "Landing..."
 vehicle.mode = VehicleMode("LAND")
