@@ -1,15 +1,15 @@
 import web
 
 urls = (
-    '/', 'index'
+	'/', 'index'
 )
 
 class index:
-    def GET(self):
+	def GET(self):
 		global string
 		return string
 string="hello world"
 if __name__ == "__main__":
-    app = web.application(urls, globals())
-    app.run()
+	app = web.application(urls, globals())
+	app.run()
 string="hi"
